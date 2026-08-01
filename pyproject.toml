@@ -1,0 +1,69 @@
+[project]
+name = "rpakit"
+version = "0.1.0"
+description = "A Python toolkit for Robotic Process Automation (RPA) and ETL pipelines providing solutions to common automation challenges."
+readme = "README.md"
+authors = [{ name = "fnxL", email = "ajaykanki.2e@gmail.com" }]
+license = "Apache-2.0"
+license-files = ["LICEN[CS]E*"]
+requires-python = ">=3.11"
+keywords = ["rpa", "automation", "etl", "excel", "pdf", "polars", "windows"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Office/Business",
+    "Typing :: Typed",
+]
+dependencies = [
+    "fastexcel>=0.20.2",
+    "polars>=1.43.1",
+    "python-calamine>=0.8.2",
+    "xlsxwriter>=3.2.9",
+]
+
+[project.urls]
+Homepage = "https://github.com/fnxL/rpakit"
+Issues = "https://github.com/fnxL/rpakit/issues"
+Changelog = "https://github.com/fnxL/rpakit/blob/main/CHANGELOG.md"
+
+[project.optional-dependencies]
+polars = []
+pdf = ["pdf-oxide>=0.3.77", "pdfplumber>=0.11.10", "pypdf>=6.14.2"]
+excel = ["openpyxl>=3.1.5", "xlsx2html>=0.6.4", "xlsxwriter>=3.2.9"]
+windows = []
+filesystem = []
+
+[build-system]
+requires = ["uv_build>=0.12.0,<0.13.0"]
+build-backend = "uv_build"
+
+[tool.uv]
+default-groups = ["dev"]
+
+[dependency-groups]
+lint = ["ruff>=0.16.0", "ty>=0.0.65"]
+test = ["pytest>=9.1.1", "pytest-cov>=7.1.0"]
+dev = [
+    { include-group = "test" },
+    { include-group = "lint" },
+    "rpakit[pdf,excel,polars,windows,filesystem]",
+]
+
+[tool.ruff]
+target-version = "py311"
+
+[tool.ty.environment]
+python-version = "3.11"
+root = ["./src"]
+
+[tool.ty.src]
+include = ["src", "tests"]
+
+[tool.ty.rules]
+possibly-unresolved-reference = "error"
