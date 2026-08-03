@@ -22,8 +22,10 @@ classifiers = [
 ]
 dependencies = [
     "fastexcel>=0.20.2",
+    "openpyxl>=3.1.5",
     "polars>=1.43.1",
     "python-calamine>=0.8.2",
+    "xlsx2html>=0.6.4",
     "xlsxwriter>=3.2.9",
 ]
 
@@ -33,18 +35,13 @@ Issues = "https://github.com/fnxL/rpakit/issues"
 Changelog = "https://github.com/fnxL/rpakit/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
-polars = []
 pdf = ["pdf-oxide>=0.3.77", "pdfplumber>=0.11.10", "pypdf>=6.14.2"]
-excel = ["openpyxl>=3.1.5", "xlsx2html>=0.6.4", "xlsxwriter>=3.2.9"]
 windows = []
 filesystem = []
 
 [build-system]
 requires = ["uv_build>=0.12.0,<0.13.0"]
 build-backend = "uv_build"
-
-[tool.uv]
-default-groups = ["dev"]
 
 [dependency-groups]
 lint = ["ruff>=0.16.0", "ty>=0.0.65"]
