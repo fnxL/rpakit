@@ -49,7 +49,7 @@ test = ["pytest>=9.1.1", "pytest-cov>=7.1.0"]
 dev = [
     { include-group = "test" },
     { include-group = "lint" },
-    "rpakit[pdf,excel,polars,windows,filesystem]",
+    "rpakit[pdf,windows,filesystem]",
 ]
 
 [tool.ruff]
