@@ -69,75 +69,33 @@ jobs:
           name: dist
           path: dist/
 
-  changelog:
-    name: Generate changelog
-    needs: test
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    outputs:
-      notes_path: release-notes.md
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-          fetch-tags: true
-          ref: main
-
-      - name: Generate release notes for this version
-        uses: orhun/git-cliff-action@v4
-        with:
-          config: cliff.toml
-          args: --latest --strip header
-        env:
-          OUTPUT: release-notes.md
-          GITHUB_REPO: ${{ github.repository }}
-
-      - name: Regenerate full CHANGELOG.md
-        uses: orhun/git-cliff-action@v4
-        with:
-          config: cliff.toml
-          args: --tag ${{ github.ref_name }}
-        env:
-          OUTPUT: CHANGELOG.md
-          GITHUB_REPO: ${{ github.repository }}
-
-      - name: Commit CHANGELOG.md to main
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          if ! git diff --quiet -- CHANGELOG.md; then
-            git add CHANGELOG.md
-            git commit -m "docs(changelog): update CHANGELOG.md for ${GITHUB_REF_NAME} [skip ci]"
-            git push origin HEAD:main
-          else
-            echo "CHANGELOG.md already up to date"
-          fi
-
-      - name: Upload release notes
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-notes
-          path: release-notes.md
 
   github-release:
     name: Create GitHub Release
-    needs: [build, changelog]
+    needs: [build]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
+      - name: Check out tag
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist/
 
-      - name: Download release notes
-        uses: actions/download-artifact@v4
+      - name: Generate release notes
+        uses: orhun/git-cliff-action@v4
         with:
-          name: release-notes
+          config: cliff.toml
+          args: --current --strip header
+        env:
+          OUTPUT: release-notes.md
+          GITHUB_REPO: ${{ github.repository }}
 
       - name: Create release
         uses: softprops/action-gh-release@v2
