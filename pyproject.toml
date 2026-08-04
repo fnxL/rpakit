@@ -1,6 +1,6 @@
 [project]
 name = "rpakit"
-version = "0.1.0"
+version = "0.1.1"
 description = "A Python toolkit for Robotic Process Automation (RPA) and ETL pipelines providing solutions to common automation challenges."
 readme = "README.md"
 authors = [{ name = "fnxL", email = "ajaykanki.2e@gmail.com" }]
