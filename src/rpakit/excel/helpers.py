@@ -8,20 +8,20 @@ from rpakit.types import FileSource
 def list_sheets(
     source: FileSource,
     *,
-    visible_only: bool = False,
+    skip_hidden: bool = False,
 ) -> list[str]:
     """
     List worksheet names in workbook order.
 
     Uses calamine's own workbook metadata, so checking sheet visibility needs
     no extra dependency. Chart/dialog/macro sheets are never included. Set
-    `visible_only=True` to also drop sheets hidden in Excel.b
+    `skip_hidden=True` to also drop sheets hidden in Excel.b
 
     Parameters
     ----------
     source : FileSource
         Path to file or file-like object.
-    visible_only : bool, optional
+    skip_hidden : bool, optional
         If True, exclude sheets hidden or very-hidden in Excel. Default False.
 
     Returns
@@ -39,7 +39,7 @@ def list_sheets(
             if meta.typ is not SheetTypeEnum.WorkSheet:
                 continue
 
-            if visible_only and meta.visible is not SheetVisibleEnum.Visible:
+            if skip_hidden and meta.visible is not SheetVisibleEnum.Visible:
                 continue
 
             sheet_names.append(meta.name)
