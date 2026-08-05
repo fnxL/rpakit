@@ -5,7 +5,7 @@ from io import BytesIO
 from typing import Any
 
 import pytest
-from openpyxl import Workbook
+import xlsxwriter
 
 from rpakit.df._header import (
     DEFAULT_WEIGHTS,
@@ -30,18 +30,23 @@ def _xlsx(
     extra_sheets: dict[str, list[list[Any]]] | None = None,
 ) -> BytesIO:
     """Build an in-memory .xlsx workbook from a list of rows."""
-    wb = Workbook()
-    ws = wb.active
-    if sheet_name is not None:
-        ws.title = sheet_name
-    for row in rows:
-        ws.append(row)
-    for name, extra_rows in (extra_sheets or {}).items():
-        extra_ws = wb.create_sheet(name)
-        for row in extra_rows:
-            extra_ws.append(row)
     buf = BytesIO()
-    wb.save(buf)
+    wb = xlsxwriter.Workbook(buf, {"in_memory": True})
+    date_format = wb.add_format({"num_format": "yyyy-mm-dd"})
+
+    def _write_rows(ws: Any, rows: list[list[Any]]) -> None:
+        for r, row in enumerate(rows):
+            for c, value in enumerate(row):
+                if isinstance(value, date):
+                    ws.write_datetime(r, c, value, date_format)
+                else:
+                    ws.write(r, c, value)
+
+    _write_rows(wb.add_worksheet(sheet_name), rows)
+    for name, extra_rows in (extra_sheets or {}).items():
+        _write_rows(wb.add_worksheet(name), extra_rows)
+
+    wb.close()
     buf.seek(0)
     return buf
 
