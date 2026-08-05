@@ -3,7 +3,6 @@ import unicodedata
 from re import Pattern
 
 _DEFAULT_PATTERN = re.compile(r"[^a-zA-Z0-9\s]")
-_WHITESPACE_RUN = re.compile(r"\s+")
 
 
 def normalize_text(
@@ -72,7 +71,7 @@ def normalize_text(
         pattern = re.compile(pattern)
 
     text = pattern.sub("", text)
-    text = _WHITESPACE_RUN.sub(" ", text).strip() if collapse_spaces else text.strip()
+    text = " ".join(text.split()) if collapse_spaces else text.strip()
 
     if separator is not None:
         text = text.replace(" ", separator)
