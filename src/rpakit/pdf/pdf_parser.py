@@ -126,3 +126,4 @@ class PdfParser:
             return self._plumber_backend.extract_tables_all(
                 table_settings=table_settings, region=region
             )
+        return [[]]
