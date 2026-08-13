@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from contextlib import nullcontext
 from dataclasses import dataclass
 from io import BufferedReader, BytesIO
 
@@ -18,7 +19,7 @@ class SheetMetadata:
 
 
 def list_sheets(
-    source: FileSource,
+    source: FileSource | CalamineWorkbook,
     *,
     skip_hidden: bool = False,
 ) -> list[SheetMetadata]:
@@ -28,7 +29,6 @@ def list_sheets(
     Only worksheets are included in the result; other sheet types supported
     by the workbook are ignored. The returned worksheets preserve their
     original workbook order.
-
 
     Parameters
     ----------
@@ -54,12 +54,17 @@ def list_sheets(
     If ``source`` is a ``BufferedReader`` or ``BytesIO`` object, its position
     is reset to the beginning before the workbook is opened.
     """
-    if isinstance(source, (BufferedReader, BytesIO)):
-        source.seek(0)
+    if isinstance(source, CalamineWorkbook):
+        workbook_ctx = nullcontext(source)
+    else:
+        if isinstance(source, (BufferedReader, BytesIO)):
+            source.seek(0)
+            
+        workbook_ctx = CalamineWorkbook.from_object(source)
 
     sheets: list[SheetMetadata] = []
 
-    with CalamineWorkbook.from_object(source) as workbook:
+    with workbook_ctx as workbook:
         for index, meta in enumerate(workbook.sheets_metadata):
             if meta.typ is not SheetTypeEnum.WorkSheet:
                 continue
@@ -68,12 +73,6 @@ def list_sheets(
             if skip_hidden and is_hidden:
                 continue
 
-            sheets.append(
-                SheetMetadata(
-                    name=meta.name,
-                    index=index,
-                    is_hidden=is_hidden,
-                )
-            )
+            sheets.append(SheetMetadata(name=meta.name, index=index, is_hidden=is_hidden))
 
     return sheets
