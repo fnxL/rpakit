@@ -5,6 +5,26 @@ import polars as pl
 from rpakit.string import normalize_text as _norm
 
 
+def require_columns(df: pl.DataFrame, columns: list[str]) -> None:
+    """Raise a ValueError if any of the columns are missing from the dataframe.
+
+    Parameters
+    ----------
+    df : pl.DataFrame
+        The dataframe to check.
+    columns : list[str]
+        The columns to check for.
+    """
+    df_cols = set(df.columns)
+    missing = [col for col in columns if col not in df_cols]
+
+    if missing:
+        raise ValueError(
+            f"Missing required columns: {', '.join(missing)}"
+            f"Available columns: {', '.join(df.columns)}"
+        )
+
+
 def normalize_columns(df: pl.DataFrame) -> pl.DataFrame:
     """Normalize a dataframe's column names.
 
