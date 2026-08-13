@@ -145,24 +145,24 @@ def _resolve_label_lookup(
 ) -> dict[str, str] | None:
     """Build a normalized-cell-text -> target-label lookup for the active boost.
 
-    `expected_headers` map to themselves; `column_aliases` map each alias to
-    its canonical column name, so matching either an expected header or any
-    of its aliases resolves to a "target hit" for counting purposes. Returns
-    `None` when neither is given (`detect_header` already guarantees at most
-    one is), so this only ever resolves a single mode, once per call.
+    `column_aliases` map each alias to its canonical column name;
+    `expected_headers` map to themselves. When both are given, `column_aliases`
+    wins outright and `expected_headers` is ignored, so this only ever
+    resolves a single mode, once per call. Returns `None` when neither is
+    given.
     """
-    if expected_headers:
-        return {
-            normalized: normalized
-            for h in expected_headers
-            if (normalized := normalize_text(h))
-        }
     if column_aliases:
         return {
             normalized: canonical
             for canonical, aliases in column_aliases.items()
             for alias in aliases
             if (normalized := normalize_text(alias))
+        }
+    if expected_headers:
+        return {
+            normalized: normalized
+            for h in expected_headers
+            if (normalized := normalize_text(h))
         }
     return None
 
@@ -256,8 +256,8 @@ def detect_header(
     match is found, the row(s) tied for the most matches get a large
     additive bonus that overrides the base heuristic outright. Both are
     matched case- and punctuation-insensitively, and both are skipped
-    entirely when their argument is not provided. They cannot be used
-    together.
+    entirely when their argument is not provided. If both are provided,
+    `column_aliases` wins outright and `expected_headers` is ignored.
 
     Parameters
     ----------
@@ -273,13 +273,15 @@ def detect_header(
     expected_headers : Sequence[str], optional
         Expected header labels, e.g. `["po number", "quantity", "ship start
         date"]`. The row containing the most of them (normalized, case
-        insensitive) wins a strong score boost. Cannot be used with column_aliases
+        insensitive) wins a strong score boost. Ignored if `column_aliases`
+        is also provided.
     column_aliases : Mapping[str, Sequence[str]], optional
         Canonical column name -> possible header spellings, e.g.
         `{"po_number": ["po#", "po no.", "purchase order"], "quantity":
         ["ord qty", "qty", "order quantity"]}`. The row matching the most
         distinct *canonical* columns (normalized, case insensitive) wins a
-        strong score boost. Cannot be used with `expected_headers`.
+        strong score boost. Takes precedence over `expected_headers` if both
+        are provided.
 
     Returns
     -------
@@ -289,8 +291,6 @@ def detect_header(
     Raises
     ------
     ValueError
-        If both `expected_headers` and `column_aliases` are provided.
-    ValueError
         If both `sheet_id` and `sheet_name` are provided.
     """
     if sheet_id is not None and sheet_name is not None:
@@ -299,12 +299,6 @@ def detect_header(
         )
     if sheet_id is not None and sheet_id == 0:
         raise ValueError("sheet_id cannot be 0; pass a non-zero sheet_id")
-
-    if expected_headers is not None and column_aliases is not None:
-        raise ValueError(
-            "expected_headers and column_aliases cannot be used together; "
-            "pass at most one of them"
-        )
 
     if isinstance(source, CalamineWorkbook):
         workbook_ctx = nullcontext(source)

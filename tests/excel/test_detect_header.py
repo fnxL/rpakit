@@ -271,9 +271,9 @@ def test_resolve_label_lookup_column_aliases_map_to_canonical():
     }
 
 
-def test_resolve_label_lookup_expected_headers_take_precedence():
+def test_resolve_label_lookup_column_aliases_take_precedence():
     lookup = _resolve_label_lookup(["po number"], {"quantity": ["qty"]})
-    assert lookup == {"po number": "po number"}
+    assert lookup == {"qty": "quantity"}
 
 
 def test_resolve_label_lookup_none_when_neither_given():
@@ -481,14 +481,16 @@ def test_detect_header_column_aliases_with_no_match_falls_back_to_base_score():
     assert result == 0
 
 
-def test_detect_header_rejects_both_boosts_together():
+def test_detect_header_column_aliases_override_expected_headers_when_both_given():
     buf = _xlsx(_decoy_and_header_rows())
-    with pytest.raises(ValueError, match="expected_headers and column_aliases"):
-        detect_header(
-            buf,
-            expected_headers=["po number"],
-            column_aliases={"po_number": ["po#"]},
-        )
+    # expected_headers matches the decoy row (row 0); column_aliases matches
+    # the real header (row 2). column_aliases should win outright.
+    result = detect_header(
+        buf,
+        expected_headers=["col1", "col2"],
+        column_aliases={"po_number": ["po number"], "quantity": ["quantity"]},
+    )
+    assert result == 2
 
 
 def test_detect_header_column_aliases_are_normalized_against_cells():
