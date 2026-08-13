@@ -56,4 +56,3 @@ class OxideBackend:
 
     def extract_blocks(self):
         return [span.text for page in self.doc.pages for span in cast(Page, page).spans]
-    

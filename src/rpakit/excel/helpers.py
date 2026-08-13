@@ -59,7 +59,7 @@ def list_sheets(
     else:
         if isinstance(source, (BufferedReader, BytesIO)):
             source.seek(0)
-            
+
         workbook_ctx = CalamineWorkbook.from_object(source)
 
     sheets: list[SheetMetadata] = []
@@ -73,6 +73,8 @@ def list_sheets(
             if skip_hidden and is_hidden:
                 continue
 
-            sheets.append(SheetMetadata(name=meta.name, index=index, is_hidden=is_hidden))
+            sheets.append(
+                SheetMetadata(name=meta.name, index=index, is_hidden=is_hidden)
+            )
 
     return sheets
