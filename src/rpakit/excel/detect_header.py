@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from contextlib import nullcontext
 from dataclasses import dataclass
 from io import BufferedReader, BytesIO
 
@@ -227,7 +228,7 @@ def _score_row(stats: Sequence[_RowStats], idx: int, weights: HeaderWeights) -> 
 
 
 def detect_header(
-    source: FileSource,
+    source: FileSource | CalamineWorkbook,
     *,
     sheet_id: int | None = None,
     sheet_name: str | None = None,
@@ -260,8 +261,8 @@ def detect_header(
 
     Parameters
     ----------
-    source : FileSource
-        Path to file or file-like object.
+    source : FileSource | CalamineWorkbook
+        Path to file, file-like object, or an already-open workbook.
     sheet_id : int, optional
         1-indexed sheet position. Ignored if `sheet_name` is given. Defaults
         to the first sheet.
@@ -305,10 +306,14 @@ def detect_header(
             "pass at most one of them"
         )
 
-    if isinstance(source, (BufferedReader, BytesIO)):
-        source.seek(0)
+    if isinstance(source, CalamineWorkbook):
+        workbook_ctx = nullcontext(source)
+    else:
+        if isinstance(source, (BufferedReader, BytesIO)):
+            source.seek(0)
+        workbook_ctx = CalamineWorkbook.from_object(source)
 
-    with CalamineWorkbook.from_object(source) as workbook:
+    with workbook_ctx as workbook:
         sheet = _resolve_sheet(workbook, sheet_id=sheet_id, sheet_name=sheet_name)
         rows = sheet.to_python(
             nrows=max_scan_rows,
