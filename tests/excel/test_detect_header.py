@@ -7,7 +7,7 @@ from typing import Any
 import pytest
 import xlsxwriter
 
-from rpakit.df._header import (
+from rpakit.excel.detect_header import (
     DEFAULT_WEIGHTS,
     HeaderWeights,
     _apply_boost,
