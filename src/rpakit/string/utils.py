@@ -1,6 +1,36 @@
 import re
+import secrets
+import string
 import unicodedata
 from re import Pattern
+
+
+def random_string(
+    length: int = 12,
+    characters: str = string.ascii_letters + string.digits,
+) -> str:
+    """
+    Generates a random string of the specified length and character set.
+
+    Parameters
+    ----------
+    length : int, optional
+        Length of the random string, by default 12
+    characters : str, optional
+        Characters to use for generating the random string, by default string.ascii_letters+string.digits
+
+    Returns
+    -------
+    str
+        The randomly generated string
+
+    Examples
+    --------
+    >>> random_string(length=10, characters="abcdefghijklmnopqrstuvwxyz")
+    'qpoilqjfej'
+    """
+    return "".join(secrets.choice(characters) for i in range(length))
+
 
 _DEFAULT_PATTERN = re.compile(r"[^a-zA-Z0-9\_\s]")
 
