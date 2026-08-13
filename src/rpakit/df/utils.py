@@ -2,6 +2,43 @@ from collections.abc import Mapping
 
 import polars as pl
 
+from rpakit.string import normalize_text as _norm
+
+
+def normalize_columns(df: pl.DataFrame) -> pl.DataFrame:
+    """Normalize a dataframe's column names.
+
+    Each column name is lowercased, stripped of punctuation/brackets, and
+    has its whitespace collapsed and replaced with underscores (via
+    :func:`rpakit.string.normalize_text`)
+
+    Parameters
+    ----------
+    df : pl.DataFrame
+        Input dataframe.
+
+    Returns
+    -------
+    pl.DataFrame
+        The same dataframe, with normalized column names.
+
+    Note
+    ----
+    `df` is mutated directly (``df.columns`` is reassigned); the return
+    value is the same object, provided for convenient chaining.
+
+    Examples
+    --------
+    >>> df = pl.DataFrame({"Foo Bar": 1, "Baz-Qux": 2})
+    >>> df.columns
+    ['Foo Bar', 'Baz-Qux']
+    >>> df = normalize_columns(df)
+    >>> df.columns
+    ['foo_bar', 'baz_qux']
+    """
+    df.columns = [_norm(c, separator="_") for c in df.columns]
+    return df
+
 
 def safe_schema_override(
     df: pl.DataFrame,
