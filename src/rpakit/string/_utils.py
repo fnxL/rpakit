@@ -2,7 +2,7 @@ import re
 import unicodedata
 from re import Pattern
 
-_DEFAULT_PATTERN = re.compile(r"[^a-zA-Z0-9\s]")
+_DEFAULT_PATTERN = re.compile(r"[^a-zA-Z0-9\_\s]")
 
 
 def normalize_text(

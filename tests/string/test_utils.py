@@ -192,7 +192,7 @@ def test_all_options_combined():
     # The literal "_" in "MÜNCHEN_2024" is removed by the default pattern
     # (it's neither an ASCII letter/digit nor whitespace), so it doesn't
     # survive to be affected by `separator` the way the space does.
-    assert result == "cafe_munchen2024"
+    assert result == "cafe_munchen_2024"
 
 
 def test_no_transformations_when_all_flags_disabled():
