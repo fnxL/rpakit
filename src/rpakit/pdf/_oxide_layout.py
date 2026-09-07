@@ -93,7 +93,9 @@ def _char_rotation_lookup(chars: Iterable) -> dict[tuple[float, float], float]:
     on the wrong line. A span's bbox origin matches its first character's
     bbox origin, so this lookup lets us classify whole spans by position.
     """
-    return {(round(c.bbox[0], 1), round(c.bbox[1], 1)): c.rotation_degrees for c in chars}
+    return {
+        (round(c.bbox[0], 1), round(c.bbox[1], 1)): c.rotation_degrees for c in chars
+    }
 
 
 def _is_rotated(span, lookup: dict[tuple[float, float], float]) -> bool:
@@ -435,30 +437,41 @@ def render_pdf(
     """
     from pdf_oxide import PdfDocument
 
+    # `PdfDocument.__exit__` is typed to return `bool`, so a checker can't
+    # rule out it suppressing an exception raised inside the block below —
+    # in that case control falls through to `return result` having never
+    # hit either return further down, hence the eager default here.
+    result = ""
     with PdfDocument(pdf_path) as doc:
         pages = list(doc.pages)
         pages_rows = [
-            to_rows(split_by_rotation(cast("Page", page).spans, page.chars)[0])
+            to_rows(
+                split_by_rotation(cast("Page", page).spans, cast("Page", page).chars)[0]
+            )
             for page in pages
         ]
         all_rows = [row for rows in pages_rows for row in rows]
         if not all_rows:
-            return PAGE_SEPARATOR.join("" for _ in pages_rows)
+            result = PAGE_SEPARATOR.join("" for _ in pages_rows)
+        else:
+            cw = char_width or estimate_char_width(all_rows)
+            x_origin = min(r[_X0] for r in all_rows) if trim_left else 0.0
+            if line_height is None:
+                all_lines = group_rows(all_rows, tol_ratio=kwargs.get("line_tol", 0.5))
+                all_mids = [
+                    -_median_of_sorted([r[_NYMID] for r in line]) for line in all_lines
+                ]
+                line_height = estimate_line_height([-m for m in all_mids], all_rows)
 
-        cw = char_width or estimate_char_width(all_rows)
-        x_origin = min(r[_X0] for r in all_rows) if trim_left else 0.0
-        if line_height is None:
-            all_lines = group_rows(all_rows, tol_ratio=kwargs.get("line_tol", 0.5))
-            all_mids = [-_median_of_sorted([r[_NYMID] for r in line]) for line in all_lines]
-            line_height = estimate_line_height([-m for m in all_mids], all_rows)
-
-        return PAGE_SEPARATOR.join(
-            render_rows(
-                rows,
-                char_width=cw,
-                line_height=line_height,
-                x_origin=x_origin,
-                **kwargs,
+            result = PAGE_SEPARATOR.join(
+                render_rows(
+                    rows,
+                    char_width=cw,
+                    line_height=line_height,
+                    x_origin=x_origin,
+                    **kwargs,
+                )
+                for rows in pages_rows
             )
-            for rows in pages_rows
-        )
+
+    return result
