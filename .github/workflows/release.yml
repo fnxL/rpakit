@@ -1,6 +1,4 @@
 name: Release
-
-# Triggered manually: bump the version in pyproject.toml, commit it, then
 # `git tag vX.Y.Z && git push origin vX.Y.Z`. See RELEASING.md.
 on:
   push:
@@ -16,6 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    outputs:
+      is_prerelease: ${{ steps.check_version.outputs.is_prerelease }}
     steps:
       - name: Check out tag
         uses: actions/checkout@v5
@@ -27,12 +27,20 @@ jobs:
           python-version: "3.11"
 
       - name: Check tag matches pyproject.toml version
+        id: check_version
         run: |
           TAG_VERSION="${GITHUB_REF_NAME#v}"
           PYPROJECT_VERSION="$(grep -m1 '^version' pyproject.toml | sed -E 's/version = "(.*)"/\1/')"
           if [ "$TAG_VERSION" != "$PYPROJECT_VERSION" ]; then
             echo "::error::Tag v$TAG_VERSION does not match pyproject.toml version $PYPROJECT_VERSION"
             exit 1
+          fi
+
+          # PEP 440 pre-release/dev markers, e.g. 0.1.2b1, 1.0.0rc1, 2.0.0.dev0
+          if echo "$PYPROJECT_VERSION" | grep -qE '(a|b|rc)[0-9]+$|\.dev[0-9]+$'; then
+            echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Install dependencies
@@ -72,7 +80,7 @@ jobs:
 
   github-release:
     name: Create GitHub Release
-    needs: [build]
+    needs: [test, build]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -105,6 +113,8 @@ jobs:
           body_path: release-notes.md
           files: dist/*
           fail_on_unmatched_files: true
+          prerelease: ${{ needs.test.outputs.is_prerelease == 'true' }}
+          make_latest: ${{ needs.test.outputs.is_prerelease == 'true' && 'false' || 'true' }}
 
   publish:
     name: Publish to PyPI
