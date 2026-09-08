@@ -74,7 +74,6 @@ jobs:
           name: dist
           path: dist/
 
-
   github-release:
     name: Create GitHub Release
     needs: [test, build]
@@ -93,42 +92,24 @@ jobs:
           name: dist
           path: dist/
 
-      - name: Determine previous tag
-        id: previous_tag
-        run: |
-          CURRENT_TAG="${GITHUB_REF_NAME}"
-          IS_PRERELEASE="${{ needs.test.outputs.is_prerelease }}"
+      - name: Generate release notes
+        uses: orhun/git-cliff-action@v4
+        with:
+          config: cliff.toml
+          args: --current --strip header
+        env:
+          OUTPUT: release-notes.md
+          GITHUB_REPO: ${{ github.repository }}
 
-          # All version tags, newest first by creation order, excluding the current tag.
-          ALL_TAGS="$(git tag --list 'v*.*.*' --sort=-creatordate | grep -v -x "$CURRENT_TAG")"
-
-          PREV_TAG=""
-          while IFS= read -r tag; do
-            [ -z "$tag" ] && continue
-
-            if echo "$tag" | grep -qE '(a|b|rc)[0-9]+$|\.dev[0-9]+$'; then
-              TAG_IS_PRERELEASE="true"
-            else
-              TAG_IS_PRERELEASE="false"
-            fi
-
-            if [ "$TAG_IS_PRERELEASE" = "$IS_PRERELEASE" ]; then
-              PREV_TAG="$tag"
-              break
-            fi
-          done <<< "$ALL_TAGS"
-
-          echo "Previous tag: ${PREV_TAG:-<none found>}"
-          echo "tag=$PREV_TAG" >> "$GITHUB_OUTPUT"
-
-      - name: Release
+      - name: Create release
         uses: softprops/action-gh-release@v3
+        if: github.ref_type == 'tag'
         with:
           name: ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
           target_commitish: ${{ github.sha }}
-          previous_tag: ${{ steps.previous_tag.outputs.tag }}
-          generate_release_notes: true
+          body_path: release-notes.md
+          files: dist/*
           prerelease: ${{ needs.test.outputs.is_prerelease == 'true' }}
           make_latest: ${{ needs.test.outputs.is_prerelease == 'true' && 'false' || 'true' }}
 
