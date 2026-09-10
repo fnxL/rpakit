@@ -32,7 +32,6 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/fnxL/rpakit"
 Issues = "https://github.com/fnxL/rpakit/issues"
-Changelog = "https://github.com/fnxL/rpakit/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 pdf = ["pdf-oxide>=0.3.77", "pdfplumber>=0.11.10", "pypdf>=6.14.2"]
@@ -44,10 +43,7 @@ requires = ["uv_build>=0.12.0,<0.13.0"]
 build-backend = "uv_build"
 
 [dependency-groups]
-lint = [
-    "ruff>=0.16.6",
-    "ty>=0.0.79",
-]
+lint = ["pyrefly>=1.2.0", "ruff>=0.16.6"]
 test = ["pytest>=9.1.1", "pytest-cov>=7.1.0"]
 dev = [
     { include-group = "test" },
@@ -59,12 +55,5 @@ dev = [
 [tool.ruff]
 target-version = "py311"
 
-[tool.ty.environment]
-python-version = "3.11"
-root = ["./src"]
-
-[tool.ty.src]
-include = ["src", "tests"]
-
-[tool.ty.rules]
-possibly-unresolved-reference = "error"
+[tool.pyrefly]
+project-includes = ["**/*.py*", "**/*.ipynb"]

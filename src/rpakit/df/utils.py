@@ -79,4 +79,5 @@ def safe_schema_override(
             orig_col = df_col_map[lower]
             valid_schema_overrides[orig_col] = dtype
 
-    return df.cast(schema_overrides, strict=strict)  # ty: ignore[invalid-argument-type]
+    # pyrefly: ignore [bad-argument-type]
+    return df.cast(schema_overrides, strict=strict)

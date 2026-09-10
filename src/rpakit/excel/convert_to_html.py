@@ -7,7 +7,7 @@ from rpakit.types import FileSource
 
 def convert_to_html(source: FileSource):
     if hasattr(source, "seek"):
-        source.seek(0)  # ty: ignore[call-non-callable]
+        source.seek(0)
 
     out_stream = xlsx2html(source)
     out_stream.seek(0)
