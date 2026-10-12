@@ -1,8 +1,6 @@
-"""Helpers for reporting missing optional dependencies with an actionable message."""
-
 from __future__ import annotations
 
-import importlib.util
+from importlib.util import find_spec
 
 
 class MissingDependencyError(ImportError):
@@ -16,15 +14,15 @@ def require_extra(extra: str, *module_names: str) -> None:
     users get a `pip install "rpakit[extra]"` hint instead of a raw
     ModuleNotFoundError.
     """
-    missing = [name for name in module_names if importlib.util.find_spec(name) is None]
+    missing = [name for name in module_names if find_spec(name) is None]
     if not missing:
         return
 
-    raise MissingDependencyError(
-        f"rpakit's '{extra}' features require the following package(s), "
-        f"which are not installed: {', '.join(missing)}.\n\n"
-        f"Install them with:\n"
-        f'    pip install "rpakit[{extra}]"\n\n'
-        f"or with uv:\n"
-        f'    uv add "rpakit[{extra}]"'
-    )
+    message = f"""rpakit's '{extra}' features require the following package(s), which are not installed: {", ".join(missing)}.
+    Install them with:
+        pip install "rpakit[{extra}]"
+
+    or with uv:
+        uv add "rpakit[{extra}]"
+    """
+    raise MissingDependencyError(message)
