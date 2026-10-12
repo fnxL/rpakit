@@ -3,42 +3,48 @@ name: CI
 on:
   push:
     branches: [main]
-    paths:
-      - "src/**"
-      - "tests/**"
-      - ".github/workflows/ci.yml"
+    paths: ["src/**", "tests/**", ".github/workflows/ci.yml"]
   pull_request:
     branches: [main]
-    paths:
-      - "src/**"
-      - "tests/**"
-      - ".github/workflows/ci.yml"
+    paths: ["src/**", "tests/**", ".github/workflows/ci.yml"]
 
 jobs:
   lint:
-    name: Lint & type-check
+    name: Lint
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v9.0.0
+        uses: astral-sh/setup-uv@v10.0.1
         with:
           enable-cache: true
-          python-version: "3.11"
 
       - name: Install dependencies
-        run: uv sync --group lint
+        run: uv sync --all-groups
 
-      - name: ruff check
+      - name: Ruff (lint)
         run: uv run ruff check .
 
-      - name: ruff format --check
+      - name: Ruff (format check)
         run: uv run ruff format --check .
 
-      - name: Run Pyrefly Type Checker
-        uses: facebook/pyrefly@main
+  type-check:
+    name: Type check
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.0.1
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --all-groups
+
+      - name: Pyrefly (type check)
+        run: uv run pyrefly check
 
   test:
     name: Test (py${{ matrix.python-version }})
@@ -48,25 +54,16 @@ jobs:
       matrix:
         python-version: ["3.11", "3.12", "3.13", "3.14"]
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v9.0.0
+        uses: astral-sh/setup-uv@v10.0.1
         with:
           enable-cache: true
           python-version: ${{ matrix.python-version }}
 
-      - name: Install test dependencies
-        run: uv sync --group dev
+      - name: Install dependencies
+        run: uv sync --group test
 
       - name: Run tests
-        run: uv run pytest --cov=rpakit --cov-report=xml --cov-report=term-missing
-
-      - name: Upload coverage
-        if: matrix.python-version == '3.11'
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: coverage.xml
-          retention-days: 7
+        run: uv run pytest
