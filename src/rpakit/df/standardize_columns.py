@@ -18,8 +18,7 @@ def _build_alias_lookup(
         for alias in normalized_aliases:
             if alias in lookup:
                 raise ValueError(
-                    f"Column alias {alias} is already in use. "
-                    f"Maps to both {lookup[alias]!r} and {canonical!r}"
+                    f"Column alias {alias} is already in use.\nMaps to both {lookup[alias]!r} and {canonical!r}"
                 )
             lookup[alias] = canonical
 
